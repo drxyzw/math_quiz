@@ -149,6 +149,7 @@ def evaluate_answer(n_clicks_inputs, values, data):
     
     true_answer = data['historical_true_answers'][-1]
     question = data['historical_questions'][-1]
+    isFinal = data['historical_count'] == data['total_count']
     if true_answer == answer: # correct answer
         data["correct_count"] += 1
         content = html.Div([
@@ -157,7 +158,14 @@ def evaluate_answer(n_clicks_inputs, values, data):
                 html.Span(f"{answer}", style={"color": "limegreen"}),
                 "✅",
                 html.H1("Correct!"),
-                dbc.Button("Next", id={"type": "button-next", "index": 0}, size="lg",  className="w-100"),
+                (
+                    html.Div([
+                        dbc.Button("Start again", id={"type": "button-restart", "index": 0}, size="lg",  className="w-100"),
+                        dcc.Location(id='url', refresh=True),
+                    ])
+                    if isFinal else 
+                    dbc.Button("Next", id={"type": "button-next", "index": 0}, size="lg",  className="w-100")
+                ),
             ], className="text-center"),
         ])
     else:
@@ -168,7 +176,14 @@ def evaluate_answer(n_clicks_inputs, values, data):
                 html.Span(f"{answer}", style={"color": "red"}),
                 "❌",
                 html.H1("Incorrect!"),
-                dbc.Button("Next", id={"type": "button-next", "index": 0}, size="lg",  className="w-100"),
+                (
+                    html.Div([
+                        dbc.Button("Start again", id={"type": "button-restart", "index": 0}, size="lg",  className="w-100"),
+                        dcc.Location(id='url', refresh=True),
+                    ])
+                    if isFinal else 
+                    dbc.Button("Next", id={"type": "button-next", "index": 0}, size="lg",  className="w-100")
+                ),
             ], className="text-center"),
         ])
     
@@ -180,3 +195,11 @@ def evaluate_answer(n_clicks_inputs, values, data):
     ])
 
     return content, data, status
+
+@callback(
+    Output("url", "href"),
+    Input({"type": "button-restart", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def reload_page(n_clicks_inputs):
+    return "/addition"
